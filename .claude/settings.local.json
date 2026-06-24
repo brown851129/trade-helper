@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_in_Chrome__list_connected_browsers",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\(\"C:\\\\Users\\\\Admin\\\\Desktop\\\\4张源文件.fig\"\\); $header = [System.Text.Encoding]::ASCII.GetString\\($bytes[0..3]\\); Write-Host \"Header: $header\"; Write-Host \"File size: $\\($bytes.Length\\) bytes\"; $hexHeader = \\($bytes[0..7] | ForEach-Object { \"{0:X2}\" -f $_ }\\) -join \" \"; Write-Host \"Hex: $hexHeader\")",
+      "mcp__Claude_Preview__preview_start",
+      "PowerShell(Copy-Item \"C:\\\\Users\\\\Admin\\\\Desktop\\\\fig_extracted\\\\thumbnail.png\" \"C:\\\\Users\\\\Admin\\\\Desktop\\\\fig_thumb.png\")",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('openai'\\); console.log\\('ok'\\)\")",
+      "Bash(Test-Path \"C:\\\\Users\\\\Admin\\\\Desktop\\\\33\\\\app\\\\api\" -PathType Container)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}

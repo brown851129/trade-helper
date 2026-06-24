@@ -1,0 +1,229 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #05080a;
+  color: #d7e0e0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* Divider with terminal label */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #5a6b6b;
+}
+
+/* ===== Mobile app surfaces ===== */
+.app-card {
+  background: rgba(255, 255, 255, 0.022);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+}
+.app-card-hover {
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+.app-card-hover:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(47, 227, 160, 0.3);
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #34e6a6, #22c98a);
+  color: #04110c;
+  border-radius: 0.85rem;
+  box-shadow: 0 8px 26px -10px rgba(47, 227, 160, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: filter 0.18s ease, transform 0.05s ease;
+}
+.btn-primary:hover {
+  filter: brightness(1.07);
+}
+.btn-primary:active {
+  transform: translateY(1px);
+}
+.btn-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.85rem;
+  color: #c5d0cf;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+.btn-ghost:hover {
+  border-color: rgba(47, 227, 160, 0.45);
+  color: #eef5f3;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism surfaces */
+.glass {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 26, 30, 0.55),
+    rgba(8, 12, 14, 0.5)
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 255, 170, 0.12);
+}
+
+.glass-soft {
+  background: rgba(12, 18, 20, 0.42);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Subtle premium depth shadow + inner top highlight */
+.glow-edge {
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 170, 0.08),
+    0 20px 60px -24px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.glow-edge-strong {
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 170, 0.18),
+    0 0 40px -10px rgba(0, 255, 170, 0.25),
+    0 24px 70px -28px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Hero darkening overlay so backdrop stays readable */
+.hero-fade {
+  background:
+    radial-gradient(120% 80% at 50% 0%, transparent 30%, rgba(5, 8, 10, 0.55) 75%),
+    linear-gradient(
+      to bottom,
+      rgba(5, 8, 10, 0.35) 0%,
+      rgba(5, 8, 10, 0.55) 45%,
+      rgba(5, 8, 10, 0.9) 80%,
+      #05080a 100%
+    );
+}
+
+/* Ambient backdrop: layered radial glow + fine grid */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 600px at 50% -10%, rgba(0, 255, 170, 0.08), transparent 60%),
+    radial-gradient(700px 500px at 100% 100%, rgba(125, 249, 255, 0.05), transparent 55%),
+    radial-gradient(700px 500px at 0% 90%, rgba(0, 255, 170, 0.04), transparent 55%),
+    #05080a;
+}
+
+.app-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 255, 170, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 170, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: center;
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
+}
+
+/* Scanline + subtle noise overlay */
+.app-scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.015) 0px,
+    rgba(255, 255, 255, 0.015) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.5;
+}
+
+/* Moving scan beam */
+.scan-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 140px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 255, 170, 0.06),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Corner brackets for "framed terminal" feel */
+.corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(0, 255, 170, 0.5);
+  border-style: solid;
+  border-width: 0;
+}
+.corner-tl { top: -1px; left: -1px; border-top-width: 1px; border-left-width: 1px; }
+.corner-tr { top: -1px; right: -1px; border-top-width: 1px; border-right-width: 1px; }
+.corner-bl { bottom: -1px; left: -1px; border-bottom-width: 1px; border-left-width: 1px; }
+.corner-br { bottom: -1px; right: -1px; border-bottom-width: 1px; border-right-width: 1px; }
+
+/* Thin custom scrollbar */
+::selection {
+  background: rgba(0, 255, 170, 0.25);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #05080a;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.18);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 170, 0.3);
+}
+
+.text-glow {
+  text-shadow: 0 0 18px rgba(0, 255, 170, 0.45);
+}
