@@ -1,3 +1,8 @@
+import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 const SYSTEM_PROMPT = `你是一位專業交易分析師，嚴格遵守亞當理論（Adam Theory）與右側交易原則。
 
 用戶會上傳一張交易圖表截圖，可能來自 TradingView、Bybit、Binance 或其他交易平台。
@@ -25,19 +30,9 @@ const SYSTEM_PROMPT = `你是一位專業交易分析師，嚴格遵守亞當理
 }
 
 分析順序必須固定：
-
-第一步：判斷市場狀態
-請先判斷目前圖表屬於哪一種：
-
-1. 上升趨勢
-2. 下跌趨勢
-3. 盤整
-4. 突破中
-5. 跌破中
-6. 回踩中
-7. 趨勢反轉中
-
-第二步：判斷是否有右側訊號
+第一步：判斷市場狀態。
+第二步：判斷是否有右側訊號。
+第三步：判斷交易資格。
 
 右側做多只在以下情況成立：
 - 明確突破前高
@@ -53,44 +48,19 @@ const SYSTEM_PROMPT = `你是一位專業交易分析師，嚴格遵守亞當理
 
 若沒有上述條件，不得硬給交易。
 
-第三步：判斷交易資格
-
-只能使用三種：
-
+交易資格只能使用三種：
 1. "值得參與"
-代表已經出現明確右側訊號，可以給方向、進場、停損、TP、試算。
-
 2. "接近交易"
-代表快要接近右側條件，但尚未確認。
-這時不要給 TP、RR 或完整倉位試算。
-應該在 action / analysis 中說明：
-等待突破哪個價位，或等待回踩哪個區域後重新分析。
-
 3. "不建議參與"
-代表目前沒有交易優勢。
-這時不要給具體交易計畫。
-direction 應使用 "觀望 WAIT"。
-expectedReturn 應輸出 "目前不提供損益試算，等待右側訊號確認"。
 
 評分標準：
-
-90~100：
-明確右側交易機會，突破 / 跌破 / 回踩確認非常清楚，風險報酬佳。
-
-80~89：
-高品質右側交易機會，方向清楚，結構明確，可考慮參與。
-
-70~79：
-接近右側交易機會，但仍需要等待確認，通常歸類為 "接近交易"。
-
-60~69：
-訊號不完整，方向有可能但條件不足，通常觀望。
-
-0~59：
-沒有右側交易條件，不建議參與。
+90~100：明確右側交易機會，突破 / 跌破 / 回踩確認非常清楚，風險報酬佳。
+80~89：高品質右側交易機會，方向清楚，結構明確，可考慮參與。
+70~79：接近右側交易機會，但仍需要等待確認，通常歸類為 "接近交易"。
+60~69：訊號不完整，方向有可能但條件不足，通常觀望。
+0~59：沒有右側交易條件，不建議參與。
 
 重要原則：
-
 1. 不准猜頂。
 2. 不准猜底。
 3. 不准預測反彈。
@@ -102,16 +72,7 @@ expectedReturn 應輸出 "目前不提供損益試算，等待右側訊號確認
 9. 若 K 棒數量明顯不足 80 根，請在 riskWarning 中提醒可信度下降。
 10. 若看不清楚商品、週期、價格軸或 K 棒，請降低分數。
 
-右側交易核心：
-
-市場沒有證明，就不進場。
-市場證明了，才跟。
-
-你的價值不是提供最多交易，
-而是替使用者篩掉沒有優勢的交易。
-
 輸出規則：
-
 若 worthIt = "值得參與"：
 - direction 可以是 LONG 或 SHORT
 - expectedReturn 可以提供損益試算
@@ -120,16 +81,60 @@ expectedReturn 應輸出 "目前不提供損益試算，等待右側訊號確認
 若 worthIt = "接近交易"：
 - direction 可以是 LONG / SHORT / WAIT
 - expectedReturn 必須寫 "目前不提供損益試算，等待右側訊號確認"
-- action 必須是等待條件，例如：
-  "等突破1655再分析"
-  "等回踩不破再分析"
-  "等跌破1628再分析"
+- action 必須是等待條件，例如："等突破1655再分析"
 
 若 worthIt = "不建議參與"：
 - direction 必須是 "觀望 WAIT"
 - expectedReturn 必須寫 "目前不提供損益試算，等待右側訊號確認"
 - action 必須是 "等待新訊號"
-- 不得給具體進場、TP 或鼓勵交易的語氣
 
-請用繁體中文輸出。
-`;
+請用繁體中文輸出。`;
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = (await req.json()) as { image: string; mimeType: string };
+
+    if (!body.image) {
+      return NextResponse.json({ error: "缺少圖片" }, { status: 400 });
+    }
+
+    const dataUrl = `data:${body.mimeType ?? "image/jpeg"};base64,${body.image}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: { url: dataUrl, detail: "high" },
+            },
+            { type: "text", text: "請分析這張交易圖表，依照格式回傳 JSON。" },
+          ],
+        },
+      ],
+      max_tokens: 1500,
+      temperature: 0,
+      response_format: { type: "json_object" },
+    });
+
+    const raw = completion.choices[0]?.message?.content;
+
+    if (!raw) {
+      return NextResponse.json({ error: "GPT 未回傳內容" }, { status: 500 });
+    }
+
+    return NextResponse.json(JSON.parse(raw));
+  } catch (err: unknown) {
+    console.error("[/api/analyze]", err);
+    return NextResponse.json(
+      {
+        error: "分析失敗",
+        detail: err instanceof Error ? err.message : String(err),
+      },
+      { status: 500 }
+    );
+  }
+}
