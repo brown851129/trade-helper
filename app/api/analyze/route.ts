@@ -36,7 +36,7 @@ const SYSTEM_PROMPT = `你是一位專業交易分析師，嚴格遵守亞當理
   "entryReason": <進場理由，繁體中文，40字以內>,
   "invalidReason": <什麼情況代表判斷錯誤，繁體中文，40字以內>,
 
-  "expectedReturn": <若 worthIt 為 "值得參與"，輸出依照 TP1/TP2 的 R 倍數描述；若非值得參與，輸出 "目前不提供損益試算，等待右側訊號確認">,
+  "expectedReturn": <若 worthIt 為 "值得參與"，必須輸出實際點位，格式固定為："進場：{entry} ｜ SL：{stopLoss} ｜ TP1：{tp1} ｜ TP2：{tp2} ｜ 風險：{riskPct}"；若非值得參與，輸出 "目前不提供損益試算，等待右側訊號確認">,
   "action": <建議行動，繁體中文，20字以內>,
   "analysis": <整體 AI 分析觀點，繁體中文，100-150字，說明市場狀態、是否有右側確認、下一步應等待什麼>,
   "riskWarning": <風險提醒，繁體中文，30-50字>
@@ -196,7 +196,7 @@ TP2 永遠等於 2R。
 若 worthIt = "值得參與"：
 - direction 必須是 LONG 或 SHORT。
 - entry、stopLoss、tp1、tp2、riskPct、riskReward 必須提供。
-- expectedReturn 必須依照 TP1 / TP2 的 R 倍數描述。
+- expectedReturn 必須輸出實際點位，格式固定為："進場：{entry} ｜ SL：{stopLoss} ｜ TP1：{tp1} ｜ TP2：{tp2} ｜ 風險：{riskPct}"。
 - action 可以給具體進場行動。
 
 若 worthIt = "接近交易"：
