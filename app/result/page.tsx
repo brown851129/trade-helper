@@ -331,14 +331,79 @@ export default function ResultPage() {
           </div>
         </div>
 
-        {imageSrc && (
-          <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02]">
-            <div className="border-b border-white/5 px-4 py-2.5">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-white/40">原始圖表</p>
-            </div>
-            <img src={imageSrc} alt="原始圖表" className="w-full object-contain" />
-          </div>
-        )}
+       {imageSrc && (
+  <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02]">
+    <div className="border-b border-white/5 px-4 py-2.5">
+      <p className="text-[11px] font-bold uppercase tracking-widest text-white/40">
+        Adam 圖表標註
+      </p>
+    </div>
+
+    <div className="relative">
+      <img src={imageSrc} alt="原始圖表" className="w-full object-contain" />
+
+      {/* 阻力區 */}
+      <div className="absolute left-[8%] top-[18%] h-[10%] w-[82%] rounded-md border border-red-400/70 bg-red-500/10">
+        <div className="absolute right-2 top-1 rounded bg-red-500/80 px-2 py-0.5 text-[10px] font-bold text-white">
+          阻力區 {visual?.resistanceZone ?? ""}
+        </div>
+      </div>
+
+      {/* 支撐區 */}
+      <div className="absolute left-[8%] top-[68%] h-[10%] w-[82%] rounded-md border border-[#2fe3a0]/70 bg-[#2fe3a0]/10">
+        <div className="absolute right-2 top-1 rounded bg-[#2fe3a0]/80 px-2 py-0.5 text-[10px] font-bold text-black">
+          支撐區 {visual?.supportZone ?? ""}
+        </div>
+      </div>
+
+      {/* 進場線 */}
+      <div className="absolute left-[8%] top-[50%] w-[82%] border-t border-dashed border-yellow-300">
+        <span className="absolute right-0 -top-5 rounded bg-yellow-300 px-2 py-0.5 text-[10px] font-bold text-black">
+          {visual?.entryLabel ?? "進場"}
+        </span>
+      </div>
+
+      {/* SL 線 */}
+      <div className="absolute left-[8%] top-[26%] w-[82%] border-t border-dashed border-red-400">
+        <span className="absolute left-0 -top-5 rounded bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+          {visual?.stopLossLabel ?? "SL"}
+        </span>
+      </div>
+
+      {/* TP1 線 */}
+      <div className="absolute left-[8%] top-[62%] w-[82%] border-t border-dashed border-cyan-300">
+        <span className="absolute left-0 -top-5 rounded bg-cyan-400 px-2 py-0.5 text-[10px] font-bold text-black">
+          {visual?.tp1Label ?? "TP1"}
+        </span>
+      </div>
+
+      {/* TP2 線 */}
+      <div className="absolute left-[8%] top-[78%] w-[82%] border-t border-dashed border-blue-400">
+        <span className="absolute left-0 -top-5 rounded bg-blue-500 px-2 py-0.5 text-[10px] font-bold text-white">
+          {visual?.tp2Label ?? "TP2"}
+        </span>
+      </div>
+
+      {/* 預期路徑 */}
+      <div className="absolute right-[12%] top-[42%] rounded-lg border border-cyan-300/40 bg-black/70 px-2 py-1 text-[10px] font-bold text-cyan-300">
+        {visual?.pathLabel ?? "預期路徑"}
+      </div>
+
+      {/* 情境 */}
+      <div className="absolute bottom-3 left-3 right-3 rounded-lg border border-white/10 bg-black/70 p-2 text-[10px] leading-relaxed text-white/80">
+        <p>
+          <span className="text-[#2fe3a0]">Scenario A：</span>
+          {visual?.scenarioA ?? "主要情境"}
+        </p>
+        <p className="mt-1">
+          <span className="text-amber-400">Scenario B：</span>
+          {visual?.scenarioB ?? "備用情境"}
+        </p>
+      </div>
+    </div>
+  </div>
+)}
+        
 
         <SectionCard title="交易概況">
           <Row label="目前狀態" value={valueText(result.currentStatus, "目前空手中")} valueClass="text-white/80" />
