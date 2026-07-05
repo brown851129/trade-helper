@@ -37,7 +37,15 @@ const SYSTEM_PROMPT = `你是一位專業交易分析師，使用「Adam Trading
   "conditionalTp2": 0,
   "conditionalRiskReward": "TP1 = 1R，TP2 = 2R",
 
+  "adamStructureEngine": {
+  "liquidityConfirmation": "已確認 | 等待中 | 未形成 | 不明",
+  "structureShift": "已確認 | 等待中 | 未形成 | 不明",
+  "trendConfirmation": "已確認 | 等待中 | 未形成 | 不明",
+  "retestValidation": "已確認 | 等待中 | 未形成 | 不明",
+  "tradeTrigger": "已觸發 | 等待中 | 未觸發 | 不明"
+},
   "adamScore": {
+  
     "structure": 0,
     "trigger": 0,
     "risk": 0,
