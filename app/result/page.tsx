@@ -234,8 +234,15 @@ export default function ResultPage() {
     for (const key of possibleImageKeys) {
       const img = sessionStorage.getItem(key);
       if (img) {
-        setImageSrc(img);
-        break;
+  const mime = sessionStorage.getItem("analyzeMime") ?? "image/jpeg";
+  const src = img.startsWith("data:")
+    ? img
+    : `data:${mime};base64,${img}`;
+
+  setImageSrc(src);
+  break;
+}
+        
       }
     }
 

@@ -51,6 +51,7 @@ export default function AnalyzingPage() {
 
   // 先把圖片拿出來
   const img = sessionStorage.getItem("pendingImage");
+  const mime = sessionStorage.getItem("pendingMime") ?? "image/jpeg";
 
   // 儲存分析結果
   sessionStorage.setItem(
@@ -60,7 +61,10 @@ export default function AnalyzingPage() {
 
   // 儲存分析圖片
   if (img) {
-    sessionStorage.setItem("analyzeImage", img);
+    if (img) {
+  sessionStorage.setItem("analyzeImage", img);
+  sessionStorage.setItem("analyzeMime", mime);
+}
   }
 
   // 清除暫存
