@@ -46,13 +46,29 @@ export default function AnalyzingPage() {
     }
 
     function finalize(data: unknown) {
-      // 完成最後一步後短暫停留再跳轉
-      setDone(5);
-      sessionStorage.removeItem("pendingImage");
-      sessionStorage.removeItem("pendingMime");
-      sessionStorage.setItem("analyzeResult", JSON.stringify(data));
-      setTimeout(() => router.push("/result"), 700);
-    }
+  // 完成最後一步後暫停再跳轉
+  setDone(5);
+
+  // 先把圖片拿出來
+  const img = sessionStorage.getItem("pendingImage");
+
+  // 儲存分析結果
+  sessionStorage.setItem(
+    "analyzeResult",
+    JSON.stringify(data)
+  );
+
+  // 儲存分析圖片
+  if (img) {
+    sessionStorage.setItem("analyzeImage", img);
+  }
+
+  // 清除暫存
+  sessionStorage.removeItem("pendingImage");
+  sessionStorage.removeItem("pendingMime");
+
+  setTimeout(() => router.push("/result"), 700);
+}
 
     // 真實 API 呼叫
     fetch("/api/analyze", {
