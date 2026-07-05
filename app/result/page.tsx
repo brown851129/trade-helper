@@ -232,18 +232,20 @@ export default function ResultPage() {
     ];
 
     for (const key of possibleImageKeys) {
-      const img = sessionStorage.getItem(key);
-      if (img) {
-  const mime = sessionStorage.getItem("analyzeMime") ?? "image/jpeg";
-  const src = img.startsWith("data:")
-    ? img
-    : `data:${mime};base64,${img}`;
+  const img = sessionStorage.getItem(key);
 
-  setImageSrc(src);
-  break;
-}
-        
-      }
+  if (img) {
+    const mime =
+      sessionStorage.getItem("analyzeMime") ?? "image/jpeg";
+
+    const src = img.startsWith("data:")
+      ? img
+      : `data:${mime};base64,${img}`;
+
+    setImageSrc(src);
+    break;
+  }
+
     }
 
     if (!raw) {
