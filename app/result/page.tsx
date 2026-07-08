@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PageHeader from "@/components/app/PageHeader";
@@ -26,6 +26,7 @@ type VisualPlan = {
   pathLabel?: string;
   scenarioA?: string;
   scenarioB?: string;
+  scenarioC?: string;
 };
 
 type AdamStructureEngine = {
@@ -36,13 +37,54 @@ type AdamStructureEngine = {
   tradeTrigger?: string;
 };
 
+type ChartBounds = {
+  chartTopY?: number | null;
+  chartBottomY?: number | null;
+  chartLeftX?: number | null;
+  chartRightX?: number | null;
+  confidence?: string;
+};
+
+type PriceScale = {
+  priceTop?: number | null;
+  priceBottom?: number | null;
+  visibleHigh?: number | null;
+  visibleLow?: number | null;
+  confidence?: string;
+};
+
+type PriceZone = {
+  low?: number | null;
+  high?: number | null;
+  label?: string;
+};
+
+type ImageMeta = {
+  width: number;
+  height: number;
+  naturalWidth: number;
+  naturalHeight: number;
+};
+
 type AnalyzeResult = {
   score?: number;
   grade?: "S" | "A" | "B" | "C" | "D" | string;
 
   marketType?: string;
+  marketState?: string;
+  trendDirection?: string;
   worthIt?: string;
   direction?: string;
+
+  keyHigh?: number | null;
+  keyLow?: number | null;
+  chartBounds?: ChartBounds;
+  priceScale?: PriceScale;
+  resistanceZone?: PriceZone;
+  supportZone?: PriceZone;
+  scenarioA?: string;
+  scenarioB?: string;
+  scenarioC?: string;
 
   currentStatus?: string;
   statusDescription?: string;
@@ -138,6 +180,188 @@ function priceText(value: number | null | undefined) {
   return Number(value).toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
+function isValidNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function parseRangeFromText(text?: string) {
+  if (!text) return null;
+
+  const matches = text.replace(/,/g, "").match(/-?\d+(\.\d+)?/g);
+
+  if (!matches || matches.length < 2) return null;
+
+  const a = Number(matches[0]);
+  const b = Number(matches[1]);
+
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+
+  return {
+    low: Math.min(a, b),
+    high: Math.max(a, b),
+  };
+}
+
+function getZone(result: AnalyzeResult, type: "resistance" | "support") {
+  const zone = type === "resistance" ? result.resistanceZone : result.supportZone;
+  const visualText =
+    type === "resistance"
+      ? result.visualPlan?.resistanceZone
+      : result.visualPlan?.supportZone;
+
+  if (isValidNumber(zone?.low) && isValidNumber(zone?.high)) {
+    return {
+      low: Math.min(zone.low, zone.high),
+      high: Math.max(zone.low, zone.high),
+      label: zone.label ?? visualText ?? "",
+    };
+  }
+
+  const parsed = parseRangeFromText(visualText);
+
+  if (parsed) {
+    return {
+      ...parsed,
+      label: visualText ?? "",
+    };
+  }
+
+  return null;
+}
+
+function getScaledChartBounds(result: AnalyzeResult, imageMeta: ImageMeta | null) {
+  if (!imageMeta) return null;
+
+  const bounds = result.chartBounds;
+  const chartTopY = bounds?.chartTopY;
+  const chartBottomY = bounds?.chartBottomY;
+  const chartLeftX = bounds?.chartLeftX;
+  const chartRightX = bounds?.chartRightX;
+
+  if (
+    isValidNumber(chartTopY) &&
+    isValidNumber(chartBottomY) &&
+    isValidNumber(chartLeftX) &&
+    isValidNumber(chartRightX) &&
+    chartBottomY > chartTopY &&
+    chartRightX > chartLeftX
+  ) {
+    const scaleX = imageMeta.width / imageMeta.naturalWidth;
+    const scaleY = imageMeta.height / imageMeta.naturalHeight;
+
+    return {
+      top: chartTopY * scaleY,
+      bottom: chartBottomY * scaleY,
+      left: chartLeftX * scaleX,
+      right: chartRightX * scaleX,
+      width: (chartRightX - chartLeftX) * scaleX,
+      height: (chartBottomY - chartTopY) * scaleY,
+    };
+  }
+
+  return {
+    top: imageMeta.height * 0.08,
+    bottom: imageMeta.height * 0.86,
+    left: imageMeta.width * 0.08,
+    right: imageMeta.width * 0.9,
+    width: imageMeta.width * 0.82,
+    height: imageMeta.height * 0.78,
+  };
+}
+
+function priceToY(price: number | null | undefined, result: AnalyzeResult, imageMeta: ImageMeta | null) {
+  if (!isValidNumber(price)) return null;
+
+  const chart = getScaledChartBounds(result, imageMeta);
+  const priceTop = result.priceScale?.priceTop;
+  const priceBottom = result.priceScale?.priceBottom;
+
+  if (
+    !chart ||
+    !isValidNumber(priceTop) ||
+    !isValidNumber(priceBottom) ||
+    priceTop === priceBottom
+  ) {
+    return null;
+  }
+
+  const y =
+    chart.top +
+    ((priceTop - price) / (priceTop - priceBottom)) * chart.height;
+
+  return Math.max(chart.top, Math.min(chart.bottom, y));
+}
+
+function zoneStyle(
+  zone: { low: number; high: number } | null,
+  result: AnalyzeResult,
+  imageMeta: ImageMeta | null,
+  fallbackTopPct: number
+) {
+  const chart = getScaledChartBounds(result, imageMeta);
+
+  if (!chart) {
+    return {
+      left: "8%",
+      top: `${fallbackTopPct}%`,
+      width: "82%",
+      height: "10%",
+    };
+  }
+
+  if (!zone) {
+    return {
+      left: chart.left,
+      top: imageMeta ? imageMeta.height * (fallbackTopPct / 100) : 0,
+      width: chart.width,
+      height: imageMeta ? imageMeta.height * 0.1 : 24,
+    };
+  }
+
+  const yHigh = priceToY(zone.high, result, imageMeta);
+  const yLow = priceToY(zone.low, result, imageMeta);
+
+  if (yHigh === null || yLow === null) {
+    return {
+      left: chart.left,
+      top: imageMeta ? imageMeta.height * (fallbackTopPct / 100) : 0,
+      width: chart.width,
+      height: imageMeta ? imageMeta.height * 0.1 : 24,
+    };
+  }
+
+  return {
+    left: chart.left,
+    top: Math.min(yHigh, yLow),
+    width: chart.width,
+    height: Math.max(8, Math.abs(yLow - yHigh)),
+  };
+}
+
+function lineStyle(
+  price: number | null | undefined,
+  result: AnalyzeResult,
+  imageMeta: ImageMeta | null,
+  fallbackTopPct: number
+) {
+  const chart = getScaledChartBounds(result, imageMeta);
+  const y = priceToY(price, result, imageMeta);
+
+  if (!chart || y === null) {
+    return {
+      left: "8%",
+      top: `${fallbackTopPct}%`,
+      width: "82%",
+    };
+  }
+
+  return {
+    left: chart.left,
+    top: y,
+    width: chart.width,
+  };
+}
+
 function ScoreRing({ score, grade }: { score: number; grade: string }) {
   const style = GRADE_STYLE[grade] ?? GRADE_STYLE.C;
   const R = 52;
@@ -216,8 +440,23 @@ function MiniScoreBar({ label, value, max }: { label: string; value: number; max
 
 export default function ResultPage() {
   const router = useRouter();
+  const imageRef = useRef<HTMLImageElement | null>(null);
+
   const [result, setResult] = useState<AnalyzeResult | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [imageMeta, setImageMeta] = useState<ImageMeta | null>(null);
+
+  function updateImageMeta() {
+    const img = imageRef.current;
+    if (!img) return;
+
+    setImageMeta({
+      width: img.clientWidth,
+      height: img.clientHeight,
+      naturalWidth: img.naturalWidth || img.clientWidth,
+      naturalHeight: img.naturalHeight || img.clientHeight,
+    });
+  }
 
   useEffect(() => {
     const raw = sessionStorage.getItem("analyzeResult");
@@ -260,6 +499,11 @@ export default function ResultPage() {
     }
   }, [router]);
 
+  useEffect(() => {
+    window.addEventListener("resize", updateImageMeta);
+    return () => window.removeEventListener("resize", updateImageMeta);
+  }, []);
+
   const display = useMemo(() => {
     if (!result) return null;
 
@@ -291,6 +535,8 @@ export default function ResultPage() {
       : "text-white/60";
 
   const visual = result.visualPlan;
+  const resistance = getZone(result, "resistance");
+  const support = getZone(result, "support");
 
   const tradePlan =
     result.expectedReturn ||
@@ -331,78 +577,102 @@ export default function ResultPage() {
           </div>
         </div>
 
-       {imageSrc && (
-  <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02]">
-    <div className="border-b border-white/5 px-4 py-2.5">
-      <p className="text-[11px] font-bold uppercase tracking-widest text-white/40">
-        Adam 圖表標註
-      </p>
-    </div>
+        {imageSrc && (
+          <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02]">
+            <div className="border-b border-white/5 px-4 py-2.5">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/40">
+                Adam 圖表標註
+              </p>
+            </div>
 
-    <div className="relative">
-      <img src={imageSrc} alt="原始圖表" className="w-full object-contain" />
+            <div className="relative">
+              <img
+                ref={imageRef}
+                src={imageSrc}
+                alt="原始圖表"
+                className="block w-full object-contain"
+                onLoad={updateImageMeta}
+              />
 
-      {/* 阻力區 */}
-      <div className="absolute left-[8%] top-[18%] h-[10%] w-[82%] rounded-md border border-red-400/70 bg-red-500/10">
-        <div className="absolute right-2 top-1 rounded bg-red-500/80 px-2 py-0.5 text-[10px] font-bold text-white">
-          阻力區 {visual?.resistanceZone ?? ""}
-        </div>
-      </div>
+              {/* 阻力區 */}
+              <div
+                className="absolute rounded-md border border-red-400/70 bg-red-500/10"
+                style={zoneStyle(resistance, result, imageMeta, 18)}
+              >
+                <div className="absolute right-2 top-1 rounded bg-red-500/80 px-2 py-0.5 text-[10px] font-bold text-white">
+                  阻力區 {resistance?.label ?? visual?.resistanceZone ?? ""}
+                </div>
+              </div>
 
-      {/* 支撐區 */}
-      <div className="absolute left-[8%] top-[68%] h-[10%] w-[82%] rounded-md border border-[#2fe3a0]/70 bg-[#2fe3a0]/10">
-        <div className="absolute right-2 top-1 rounded bg-[#2fe3a0]/80 px-2 py-0.5 text-[10px] font-bold text-black">
-          支撐區 {visual?.supportZone ?? ""}
-        </div>
-      </div>
+              {/* 支撐區 */}
+              <div
+                className="absolute rounded-md border border-[#2fe3a0]/70 bg-[#2fe3a0]/10"
+                style={zoneStyle(support, result, imageMeta, 68)}
+              >
+                <div className="absolute right-2 top-1 rounded bg-[#2fe3a0]/80 px-2 py-0.5 text-[10px] font-bold text-black">
+                  支撐區 {support?.label ?? visual?.supportZone ?? ""}
+                </div>
+              </div>
 
-      {/* 進場線 */}
-      <div className="absolute left-[8%] top-[50%] w-[82%] border-t border-dashed border-yellow-300">
-        <span className="absolute right-0 -top-5 rounded bg-yellow-300 px-2 py-0.5 text-[10px] font-bold text-black">
-          {visual?.entryLabel ?? "進場"}
-        </span>
-      </div>
+              {/* 進場線 */}
+              <div
+                className="absolute border-t border-dashed border-yellow-300"
+                style={lineStyle(result.entry, result, imageMeta, 50)}
+              >
+                <span className="absolute right-0 -top-5 rounded bg-yellow-300 px-2 py-0.5 text-[10px] font-bold text-black">
+                  {visual?.entryLabel ?? `Entry ${priceText(result.entry)}`}
+                </span>
+              </div>
 
-      {/* SL 線 */}
-      <div className="absolute left-[8%] top-[26%] w-[82%] border-t border-dashed border-red-400">
-        <span className="absolute left-0 -top-5 rounded bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-          {visual?.stopLossLabel ?? "SL"}
-        </span>
-      </div>
+              {/* SL 線 */}
+              <div
+                className="absolute border-t border-dashed border-red-400"
+                style={lineStyle(result.stopLoss, result, imageMeta, 26)}
+              >
+                <span className="absolute left-0 -top-5 rounded bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                  {visual?.stopLossLabel ?? `SL ${priceText(result.stopLoss)}`}
+                </span>
+              </div>
 
-      {/* TP1 線 */}
-      <div className="absolute left-[8%] top-[62%] w-[82%] border-t border-dashed border-cyan-300">
-        <span className="absolute left-0 -top-5 rounded bg-cyan-400 px-2 py-0.5 text-[10px] font-bold text-black">
-          {visual?.tp1Label ?? "TP1"}
-        </span>
-      </div>
+              {/* TP1 線 */}
+              <div
+                className="absolute border-t border-dashed border-cyan-300"
+                style={lineStyle(result.tp1, result, imageMeta, 62)}
+              >
+                <span className="absolute left-0 -top-5 rounded bg-cyan-400 px-2 py-0.5 text-[10px] font-bold text-black">
+                  {visual?.tp1Label ?? `TP1 ${priceText(result.tp1)}`}
+                </span>
+              </div>
 
-      {/* TP2 線 */}
-      <div className="absolute left-[8%] top-[78%] w-[82%] border-t border-dashed border-blue-400">
-        <span className="absolute left-0 -top-5 rounded bg-blue-500 px-2 py-0.5 text-[10px] font-bold text-white">
-          {visual?.tp2Label ?? "TP2"}
-        </span>
-      </div>
+              {/* TP2 線 */}
+              <div
+                className="absolute border-t border-dashed border-blue-400"
+                style={lineStyle(result.tp2, result, imageMeta, 78)}
+              >
+                <span className="absolute left-0 -top-5 rounded bg-blue-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                  {visual?.tp2Label ?? `TP2 ${priceText(result.tp2)}`}
+                </span>
+              </div>
 
-      {/* 預期路徑 */}
-      <div className="absolute right-[12%] top-[42%] rounded-lg border border-cyan-300/40 bg-black/70 px-2 py-1 text-[10px] font-bold text-cyan-300">
-        {visual?.pathLabel ?? "預期路徑"}
-      </div>
+              {/* 預期路徑 */}
+              <div className="absolute right-[12%] top-[42%] rounded-lg border border-cyan-300/40 bg-black/70 px-2 py-1 text-[10px] font-bold text-cyan-300">
+                {visual?.pathLabel ?? "預期路徑"}
+              </div>
 
-      {/* 情境 */}
-      <div className="absolute bottom-3 left-3 right-3 rounded-lg border border-white/10 bg-black/70 p-2 text-[10px] leading-relaxed text-white/80">
-        <p>
-          <span className="text-[#2fe3a0]">Scenario A：</span>
-          {visual?.scenarioA ?? "主要情境"}
-        </p>
-        <p className="mt-1">
-          <span className="text-amber-400">Scenario B：</span>
-          {visual?.scenarioB ?? "備用情境"}
-        </p>
-      </div>
-    </div>
-  </div>
-)}
+              {/* 情境 */}
+              <div className="absolute bottom-3 left-3 right-3 rounded-lg border border-white/10 bg-black/70 p-2 text-[10px] leading-relaxed text-white/80">
+                <p>
+                  <span className="text-[#2fe3a0]">Scenario A：</span>
+                  {visual?.scenarioA ?? result.scenarioA ?? "主要情境"}
+                </p>
+                <p className="mt-1">
+                  <span className="text-amber-400">Scenario B：</span>
+                  {visual?.scenarioB ?? result.scenarioB ?? "備用情境"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         
 
         <SectionCard title="交易概況">
