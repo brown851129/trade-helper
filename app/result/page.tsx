@@ -578,101 +578,22 @@ export default function ResultPage() {
         </div>
 
         {imageSrc && (
-          <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02]">
-            <div className="border-b border-white/5 px-4 py-2.5">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-white/40">
-                Adam 圖表標註
-              </p>
-            </div>
+  <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02]">
+    <div className="border-b border-white/5 px-4 py-2.5">
+      <p className="text-[11px] font-bold uppercase tracking-widest text-white/40">
+        原始圖表
+      </p>
+    </div>
 
-            <div className="relative">
-              <img
-                ref={imageRef}
-                src={imageSrc}
-                alt="原始圖表"
-                className="block w-full object-contain"
-                onLoad={updateImageMeta}
-              />
-
-              {/* 阻力區 */}
-              <div
-                className="absolute rounded-md border border-red-400/70 bg-red-500/10"
-                style={zoneStyle(resistance, result, imageMeta, 18)}
-              >
-                <div className="absolute right-2 top-1 rounded bg-red-500/80 px-2 py-0.5 text-[10px] font-bold text-white">
-                  阻力區 {resistance?.label ?? visual?.resistanceZone ?? ""}
-                </div>
-              </div>
-
-              {/* 支撐區 */}
-              <div
-                className="absolute rounded-md border border-[#2fe3a0]/70 bg-[#2fe3a0]/10"
-                style={zoneStyle(support, result, imageMeta, 68)}
-              >
-                <div className="absolute right-2 top-1 rounded bg-[#2fe3a0]/80 px-2 py-0.5 text-[10px] font-bold text-black">
-                  支撐區 {support?.label ?? visual?.supportZone ?? ""}
-                </div>
-              </div>
-
-              {/* 進場線 */}
-              <div
-                className="absolute border-t border-dashed border-yellow-300"
-                style={lineStyle(result.entry, result, imageMeta, 50)}
-              >
-                <span className="absolute right-0 -top-5 rounded bg-yellow-300 px-2 py-0.5 text-[10px] font-bold text-black">
-                  {visual?.entryLabel ?? `Entry ${priceText(result.entry)}`}
-                </span>
-              </div>
-
-              {/* SL 線 */}
-              <div
-                className="absolute border-t border-dashed border-red-400"
-                style={lineStyle(result.stopLoss, result, imageMeta, 26)}
-              >
-                <span className="absolute left-0 -top-5 rounded bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                  {visual?.stopLossLabel ?? `SL ${priceText(result.stopLoss)}`}
-                </span>
-              </div>
-
-              {/* TP1 線 */}
-              <div
-                className="absolute border-t border-dashed border-cyan-300"
-                style={lineStyle(result.tp1, result, imageMeta, 62)}
-              >
-                <span className="absolute left-0 -top-5 rounded bg-cyan-400 px-2 py-0.5 text-[10px] font-bold text-black">
-                  {visual?.tp1Label ?? `TP1 ${priceText(result.tp1)}`}
-                </span>
-              </div>
-
-              {/* TP2 線 */}
-              <div
-                className="absolute border-t border-dashed border-blue-400"
-                style={lineStyle(result.tp2, result, imageMeta, 78)}
-              >
-                <span className="absolute left-0 -top-5 rounded bg-blue-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                  {visual?.tp2Label ?? `TP2 ${priceText(result.tp2)}`}
-                </span>
-              </div>
-
-              {/* 預期路徑 */}
-              <div className="absolute right-[12%] top-[42%] rounded-lg border border-cyan-300/40 bg-black/70 px-2 py-1 text-[10px] font-bold text-cyan-300">
-                {visual?.pathLabel ?? "預期路徑"}
-              </div>
-
-              {/* 情境 */}
-              <div className="absolute bottom-3 left-3 right-3 rounded-lg border border-white/10 bg-black/70 p-2 text-[10px] leading-relaxed text-white/80">
-                <p>
-                  <span className="text-[#2fe3a0]">Scenario A：</span>
-                  {visual?.scenarioA ?? result.scenarioA ?? "主要情境"}
-                </p>
-                <p className="mt-1">
-                  <span className="text-amber-400">Scenario B：</span>
-                  {visual?.scenarioB ?? result.scenarioB ?? "備用情境"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+    <img
+      src={imageSrc}
+      alt="原始圖表"
+      className="w-full object-contain"
+    />
+  </div>
+)}
+      
+      
         
 
         <SectionCard title="交易概況">
