@@ -1,39 +1,39 @@
-import type { Metadata } from "next";
-import { JetBrains_Mono, Noto_Sans_TC } from "next/font/google";
-import BottomNav from "@/components/app/BottomNav";
+import type { Metadata, Viewport } from "next";
+import { Inter, JetBrains_Mono, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 
-const jetbrainsMono = JetBrains_Mono({
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const tc = Noto_Sans_TC({
   subsets: ["latin"],
-  variable: "--font-mono",
+  weight: ["400", "500", "700", "900"],
+  variable: "--font-tc",
   display: "swap",
 });
-
-const notoSansTC = Noto_Sans_TC({
-  weight: ["400", "500", "700"],
-  variable: "--font-sans",
-  display: "swap",
-  preload: false,
-});
+const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "交易助手 ｜ 進場前，先看一眼",
+  title: "浩穎研究室｜猛健樂，真的需要一直加量嗎？",
   description:
-    "交易助手：上傳交易圖表，系統快速分析方向、進場位置、壓力支撐區與風險報酬比，幫你判斷這筆單值不值得做。不預測未來，只幫你避開爛單。",
+    "浩穎的個人獨立研究：為什麼我認為 tirzepatide（猛健樂）2.5 mg 值得重新討論。數據、文獻與我的觀點。本文不構成醫療建議。",
+  authors: [{ name: "浩穎" }],
+  openGraph: {
+    title: "猛健樂，真的需要一直加量嗎？— 浩穎研究室",
+    description: "如果低劑量就有效，為什麼一定要往上加？WRITTEN BY 浩穎",
+    type: "article",
+    locale: "zh_TW",
+  },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const viewport: Viewport = {
+  themeColor: "#07080A",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-Hant" className={`${jetbrainsMono.variable} ${notoSansTC.variable}`}>
-      <body className="bg-[#05080a]">
-        <div className="app-backdrop" />
-        {children}
-        <BottomNav />
-      </body>
+    <html lang="zh-Hant-TW" className={`${inter.variable} ${tc.variable} ${mono.variable}`}>
+      <body className="font-sans">{children}</body>
     </html>
   );
 }
